@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<header>
+  <div class="head-top">
+    <div>
+      <div class="sub">Personal Finance</div>
+      <h1>Budget Tracker</h1>
+    </div>
+    <button id="themeBtn" class="icon-btn" title="Toggle dark mode" onclick="toggleTheme()">☾</button>
+  </div>
+  <div class="hero">
+    <div class="lbl">Total net worth</div>
+    <div class="net" id="heroNet">$0.00</div>
+    <div class="hero-note"><span class="lock">●</span> Private — saved on this device only</div>
+  </div>
+</header>
+
+<main>
+  <div class="due-banner" id="dueBanner"></div>
+
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="view active">
+    <div id="availToday" class="avail-wrap"></div>
+    <div class="accts" id="acctCards"></div>
+    <div class="summary" id="summaryStats"></div>
+
+    <div class="chart-grid" style="margin-bottom:16px">
+      <div class="card">
+        <h2>Income vs Spending</h2><div class="hint">Last 6 months</div>
+        <div class="chart-box"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>This Month</h2><div class="hint">Spending by category</div>
+        <div class="chart-box"><canvas id="catDonut"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Budgets &amp; Categories</h2>
+      <div class="hint">This month — bars turn amber near your limit, red when over.</div>
+      <div id="catBars"></div>
+    </div>
+
+    <div class="card">
+      <h2>Activity</h2>
+      <div class="sectiontitle">Upcoming · next 14 days</div>
+      <div id="upcomingList"></div>
+      <div class="sectiontitle">Recent</div>
+      <div id="recentTx"></div>
+    </div>
+  </section>
+
+  <!-- ADD -->
+  <section id="add" class="view">
+    <div class="card">
+      <h2>Log Spending</h2>
+      <div class="hint">Enter what you spent and which account it came from.</div>
+      <div class="field amt-wrap"><label>Amount</label><span>$</span>
+        <input id="expAmount" type="number" inputmode="decimal" placeholder="0.00" step="0.01" min="0"></div>
+      <div class="field"><label>Account</label><div class="chips" id="expAcctChips"></div></div>
+      <div class="field"><label>Category</label><div class="chips" id="expCatChips"></div></div>
+      <a class="more-link" id="expMoreToggle" onclick="toggleExpMore()">+ Date &amp; note</a>
+      <div class="row" id="expMoreRow" style="display:none">
+        <div><label>Date</label><input id="expDate" type="date"></div>
+        <div><label>Note (optional)</label><input id="expNote" type="text" placeholder="e.g. Trader Joe's"></div>
+      </div>
+      <button class="btn full sticky-save" onclick="addExpense()">Save Spending</button>
+    </div>
+    <div class="card">
+      <h2>Transfer Between Accounts</h2>
+      <div class="hint">Move money you already have (e.g. checking → savings).</div>
+      <div class="row three">
+        <div><label>From</label><select id="trFrom"></select></div>
+        <div><label>To</label><select id="trTo"></select></div>
+        <div class="amt-wrap sm"><label>Amount</label><span style="top:70%">$</span>
+          <input id="trAmount" type="number" inputmode="decimal" placeholder="0.00" step="0.01"></div>
+      </div>
+      <button class="btn nav full" onclick="addTransfer()">Record Transfer</button>
+    </div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section id="calendar" class="view">
+    <div class="card">
+      <div class="cal-toolbar">
+        <h2 id="calTitle">Month</h2>
+        <div class="cal-nav">
+          <button onclick="calShift(-1)" title="Previous">‹</button>
+          <button onclick="calToday()" title="Today" style="width:auto;padding:0 12px;font-size:13px;font-weight:600">Today</button>
+          <button onclick="calShift(1)" title="Next">›</button>
+        </div>
+      </div>
+      <div id="calGrid"></div>
+      <div class="cal-legend">
+        <span><i style="background:var(--green)"></i> Payday</span>
+        <span><i style="background:var(--red)"></i> Bill / expense</span>
+        <span><i style="background:var(--red);opacity:.55"></i> Already logged</span>
+        <span class="muted">Tap a day for details</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Schedule a Payday</h2>
+      <div class="hint">Set your next payday and how often it repeats. With auto-post on, it deposits &amp; splits using your Paycheck rules automatically when the date arrives.</div>
+      <div class="row">
+        <div><label>Name</label><input id="pdName" placeholder="Paycheck"></div>
+        <div class="amt-wrap sm"><label>Amount</label><span style="top:70%">$</span><input id="pdAmount" type="number" placeholder="0.00"></div>
+      </div>
+      <div class="row three">
+        <div><label>Next payday</label><input id="pdDate" type="date"></div>
+        <div><label>Repeats</label>
+          <select id="pdFreq"><option value="biweekly" selected>Every 2 weeks</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="once">One-time</option></select></div>
+        <div><label>Auto-post</label><label class="mini-toggle" style="margin-top:8px"><input id="pdAuto" type="checkbox" checked><span></span></label></div>
+      </div>
+      <button class="btn full" onclick="addPayday()">Add Payday to Calendar</button>
+      <div id="paydayList" style="margin-top:14px"></div>
+    </div>
+
+    <div class="card">
+      <h2>Schedule a Bill / Recurring Expense</h2>
+      <div class="hint">Add rent, subscriptions, utilities — anything that repeats. They appear on the calendar; auto-post records them on their due date.</div>
+      <div class="row">
+        <div><label>Name</label><input id="billName" placeholder="e.g. Rent, Netflix"></div>
+        <div class="amt-wrap sm"><label>Amount</label><span style="top:70%">$</span><input id="billAmount" type="number" placeholder="0.00"></div>
+      </div>
+      <div class="row three">
+        <div><label>Account</label><select id="billAccount"></select></div>
+        <div><label>Category</label><select id="billCategory"></select></div>
+        <div><label>Repeats</label>
+          <select id="billFreq"><option value="monthly" selected>Monthly</option><option value="biweekly">Every 2 weeks</option><option value="weekly">Weekly</option><option value="once">One-time</option></select></div>
+      </div>
+      <div class="row">
+        <div id="billMonthlyRow"><label>Day of month</label><input id="billDay" type="number" min="1" max="31" value="1"></div>
+        <div id="billDateRow" style="display:none"><label>Start / due date</label><input id="billDate" type="date"></div>
+        <div><label>Auto-post</label><label class="mini-toggle" style="margin-top:8px"><input id="billAuto" type="checkbox"><span></span></label></div>
+      </div>
+      <button class="btn full" onclick="addBill()">Add Bill to Calendar</button>
+      <div id="billList" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <!-- PAYCHECK -->
+  <section id="paycheck" class="view">
+    <div class="card">
+      <h2>Deposit a Paycheck</h2>
+      <div class="hint">Enter a total deposit now. It splits by your rules below — fixed amounts first, the rest to your remainder account. (To automate this every 2 weeks, use the Calendar tab.)</div>
+      <div class="field amt-wrap"><label>Total paycheck amount</label><span>$</span>
+        <input id="payAmount" type="number" inputmode="decimal" placeholder="0.00" step="0.01"></div>
+      <div class="row">
+        <div><label>Date</label><input id="payDate" type="date"></div>
+        <div><label>Source (optional)</label><input id="paySource" type="text" placeholder="e.g. Employer payroll"></div>
+      </div>
+      <div class="note" id="payPreview">Enter an amount to preview the split.</div>
+      <button class="btn full" style="margin-top:12px" onclick="addPaycheck()">Deposit &amp; Split</button>
+    </div>
+    <div class="card">
+      <h2>Direct Deposit Rules</h2>
+      <div class="hint">Fixed dollar amounts that always go to specific accounts. Everything left over lands in your remainder account.</div>
+      <div id="ruleList"></div>
+      <button class="btn ghost sm" onclick="addRuleRow()">+ Add fixed allocation</button>
+      <div class="field" style="margin-top:16px"><label>Remainder account (gets whatever is left)</label>
+        <select id="remainderSelect" onchange="saveRules()"></select></div>
+      <button class="btn nav sm" onclick="saveRules(true)">Save Rules</button>
+    </div>
+  </section>
+
+  <!-- INSIGHTS -->
+  <section id="insights" class="view">
+    <div id="availTodayIns" class="avail-wrap"></div>
+    <div class="ins-numbers" id="insNumbers"></div>
+    <div class="chart-grid" style="margin-bottom:16px">
+      <div class="card"><h2>Income vs Spending</h2><div class="hint">Last 6 months</div><div class="chart-box"><canvas id="insTrend"></canvas></div></div>
+      <div class="card"><h2>Where Your Money Is</h2><div class="hint">Account balances</div><div class="chart-box"><canvas id="insAccounts"></canvas></div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="card"><h2>Category Breakdown</h2><div class="hint">This month</div><div class="chart-box"><canvas id="insCategory"></canvas></div></div>
+      <div class="card"><h2>Spending Pace</h2><div class="hint">Cumulative, this month</div><div class="chart-box"><canvas id="insDaily"></canvas></div></div>
+    </div>
+  </section>
+
+  <!-- PLAN / ADVISOR -->
+  <section id="plan" class="view">
+    <div class="card">
+      <h2>Budget Plan</h2>
+      <div class="hint">Enter your monthly take-home and fixed expenses. I'll show how much you could save and what's left to spend each day — then that daily number powers your "available to spend today."</div>
+      <div class="field amt-wrap"><label>Monthly take-home income</label><span>$</span>
+        <input id="planIncome" type="number" inputmode="decimal" placeholder="0.00" step="0.01" onchange="setPlanIncome(this.value)"></div>
+      <div id="planEst"></div>
+    </div>
+
+    <div class="card">
+      <h2>Monthly Expenses</h2>
+      <div class="hint">Rent, utilities, subscriptions, loan payments — your recurring fixed costs.</div>
+      <div id="planExpList"></div>
+      <div class="row" style="margin-top:12px">
+        <div><input id="mexName" placeholder="e.g. Rent"></div>
+        <div class="amt-wrap sm"><span>$</span><input id="mexAmount" type="number" placeholder="0.00"></div>
+      </div>
+      <button class="btn ghost sm" onclick="addMonthlyExpense()">+ Add expense</button>
+      <div class="note" id="planSummary" style="margin-top:14px"></div>
+    </div>
+
+    <div class="card">
+      <h2>Your Options</h2>
+      <div class="hint">Pick a savings style. The daily figure becomes your "available to spend today," and any unspent amount rolls into the next day.</div>
+      <div id="tierCards" class="tier-grid"></div>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="transactions" class="view">
+    <div class="card">
+      <h2>History</h2>
+      <div class="filters">
+        <select id="fAccount" onchange="renderTx()"><option value="">All accounts</option></select>
+        <select id="fCategory" onchange="renderTx()"><option value="">All categories</option></select>
+        <select id="fType" onchange="renderTx()">
+          <option value="">All types</option><option value="expense">Spending</option><option value="income">Income</option><option value="transfer">Transfers</option>
+        </select>
+      </div>
+      <div id="txList"></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="settings" class="view">
+    <div class="card">
+      <h2>Accounts</h2><div class="hint">Set starting balances and manage accounts.</div>
+      <div id="acctSettings"></div>
+      <div class="row" style="margin-top:14px">
+        <div><input id="newAcctName" placeholder="Account name"></div>
+        <div><select id="newAcctType"><option>Checking</option><option>Savings</option><option>Cash</option><option>Credit Card</option><option>Other</option></select></div>
+      </div>
+      <button class="btn ghost sm" onclick="addAccount()">+ Add account</button>
+    </div>
+
+    <div class="card">
+      <h2>Monthly Budgets</h2><div class="hint">Optional spending limit per category. Leave blank for no limit.</div>
+      <div id="budgetSettings"></div>
+    </div>
+
+    <div class="card">
+      <h2>Categories</h2><div class="hint">Tap a category to remove it. Add your own below.</div>
+      <div class="chips" id="catSettings"></div>
+      <div class="row" style="margin-top:14px">
+        <div><input id="newCat" placeholder="New category"></div>
+        <div><button class="btn ghost full" onclick="addCategory()">+ Add category</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Backup &amp; Data</h2>
+      <div class="hint">Saved automatically in this browser. Export a backup to keep it safe or move devices.</div>
+      <div class="row">
+        <div><button class="btn nav full" onclick="exportData()">Export backup (.json)</button></div>
+        <div><button class="btn ghost full" onclick="document.getElementById('importFile').click()">Import backup</button></div>
+      </div>
+      <input id="importFile" type="file" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn full" style="margin-top:10px;background:#fff;border:1px solid var(--red);color:var(--red);box-shadow:none" onclick="resetAll()">Reset everything</button>
+    </div>
+  </section>
+</main>
+
+<!-- day-detail modal -->
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-card">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- quick-add sheet (opened by the center ＋) -->
+<div class="sheet" id="quickAdd" onclick="if(event.target===this)closeQuickAdd()">
+  <div class="sheet-card">
+    <div class="sheet-head"><h2>Add Spending</h2><button class="modal-close" onclick="closeQuickAdd()">×</button></div>
+    <div class="sheet-body">
+      <div class="field amt-wrap big"><span>$</span>
+        <input id="qAmount" type="number" inputmode="decimal" placeholder="0.00" step="0.01" min="0"></div>
+      <label>Account</label><div class="chips" id="qAcctChips"></div>
+      <label style="margin-top:12px">Category</label><div class="chips" id="qCatChips"></div>
+      <a class="more-link" onclick="closeQuickAdd();show('add')">Need a date, note, or transfer? Open full form →</a>
+    </div>
+    <div class="sheet-foot"><button class="btn full" onclick="quickSave()">Save Spending</button></div>
+  </div>
+</div>
+
+<!-- more menu sheet -->
+<div class="sheet" id="moreSheet" onclick="if(event.target===this)closeMore()">
+  <div class="sheet-card">
+    <div class="sheet-head"><h2>More</h2><button class="modal-close" onclick="closeMore()">×</button></div>
+    <div class="sheet-body more-list">
+      <button onclick="moreGo('plan')"><b>Budget Plan</b><span>income, expenses &amp; savings advisor</span></button>
+      <button onclick="moreGo('add')"><b>Add — detailed</b><span>amount, date, note &amp; transfers</span></button>
+      <button onclick="moreGo('paycheck')"><b>Paycheck</b><span>deposit &amp; direct-deposit split rules</span></button>
+      <button onclick="moreGo('transactions')"><b>History</b><span>all transactions, filterable</span></button>
+      <button onclick="moreGo('settings')"><b>Settings</b><span>accounts, budgets, categories, backup</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- fixed bottom navigation -->
+<nav class="bottom-nav">
+  <button data-tab="dashboard" class="active" onclick="show('dashboard')"><span class="ni" aria-hidden="true">▦</span>Home</button>
+  <button data-tab="calendar" onclick="show('calendar')"><span class="ni" aria-hidden="true">▤</span>Calendar</button>
+  <button class="fab" onclick="openQuickAdd()" aria-label="Add spending">+</button>
+  <button data-tab="insights" onclick="show('insights')"><span class="ni" aria-hidden="true">◴</span>Insights</button>
+  <button data-tab="more" onclick="openMore()"><span class="ni" aria-hidden="true">⋯</span>More</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
