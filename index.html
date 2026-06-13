@@ -87,6 +87,19 @@
       </div>
       <button class="btn nav full" onclick="addTransfer()">Record Transfer</button>
     </div>
+
+    <div class="card">
+      <h2>Balance Adjustment</h2>
+      <div class="hint">Reconciling? Set an account to its real balance. This corrects the total <b>without</b> counting against your daily spend.</div>
+      <div class="row">
+        <div><label>Account</label><select id="adjAccount" onchange="renderAdjHint()"></select></div>
+        <div class="amt-wrap sm"><label>Correct balance</label><span style="top:70%">$</span>
+          <input id="adjTarget" type="number" inputmode="decimal" placeholder="0.00" step="0.01"></div>
+      </div>
+      <div class="hint" id="adjHint"></div>
+      <div class="field"><label>Note (optional)</label><input id="adjNote" type="text" placeholder="e.g. Reconciled with bank"></div>
+      <button class="btn nav full" onclick="addAdjustment()">Set Balance</button>
+    </div>
   </section>
 
   <!-- CALENDAR -->
@@ -225,7 +238,7 @@
         <select id="fAccount" onchange="renderTx()"><option value="">All accounts</option></select>
         <select id="fCategory" onchange="renderTx()"><option value="">All categories</option></select>
         <select id="fType" onchange="renderTx()">
-          <option value="">All types</option><option value="expense">Spending</option><option value="income">Income</option><option value="transfer">Transfers</option>
+          <option value="">All types</option><option value="expense">Spending</option><option value="income">Income</option><option value="transfer">Transfers</option><option value="adjust">Adjustments</option>
         </select>
       </div>
       <div id="txList"></div>
